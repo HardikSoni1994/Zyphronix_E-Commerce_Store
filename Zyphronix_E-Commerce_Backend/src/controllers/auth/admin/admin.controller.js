@@ -40,12 +40,11 @@ module.exports.loginAdmin = async (req, res) => {
     if (!admin) {
       return res.status(statusCode.NOT_FOUND).json(errorResponse(statusCode.NOT_FOUND, true, MSG.ADMIN_NOT_FOUND));
     }
-    console.log("Database mein current attempt count:", admin.attempt);
 
     const isPasswordValid = await bcrypt.compare(req.body.password, admin.password);
     
     if (!isPasswordValid) {
-      return res.status(statusCode.UNAUTHORIZED).json(errorResponse(statusCode.UNAUTHORIZED, true, MSG.ADMIN_LOGIN_FAILED));
+      return res.status(statusCode.UNAUTHORIZED).json(errorResponse(statusCode.UNAUTHORIZED, true, MSG.PASSWORD_INCORRECT));
     }
 
     // JWT Token Generate Logic

@@ -1,35 +1,56 @@
-import axios from "axios";
 import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
+import { Loader2 } from "lucide-react";
+import { authService } from "../../services/authService";
 
 export default function Loginpage() {
-
   const navigate = useNavigate();
 
   const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleInputChange = (field: string, value: string) => {
     setLoginData((prev) => ({
       ...prev,
       [field]: value,
     }));
+    if (errorMessage) setErrorMessage("");
   };
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
-    console.log("Admin Login Data :", loginData);
 
-    const response = await axios.post(
-      "http://localhost:3000/api/auth/admin/login",
-      loginData,
-    );
+    // Validation
+    if (!loginData.email.trim() || !loginData.password.trim()) {
+      setErrorMessage("Please fill in all the details.");
+      return;
+    }
 
-    console.log("Response :", response);
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(loginData.email)) {
+      setErrorMessage("Please enter a valid email address.");
+      return;
+    }
 
-    const { token } = response.data.token;
-    localStorage.setItem("loginAdmin", token);
+    try {
+      setErrorMessage("");
+      setIsLoading(true);
+      console.log("Admin Login Data :", loginData);
 
-    navigate("/dashboard");
+      const response = await authService.loginAdmin(loginData);
+
+      console.log("Response :", response);
+
+      const { token } = response.data.token;
+      localStorage.setItem("loginAdmin", token);
+
+      navigate("/dashboard");
+    } catch (error: any) {
+      setErrorMessage(error.response?.data?.message || "Invalid credentials.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -39,6 +60,11 @@ export default function Loginpage() {
           <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
             Zyphronix Admin Login
           </h2>
+          {errorMessage && (
+            <div className="mb-4 p-3 text-sm text-red-700 bg-red-100 border border-red-300 rounded-md">
+              ⚠️ {errorMessage}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email Field */}
@@ -54,7 +80,7 @@ export default function Loginpage() {
                 }
                 placeholder="admin@zyphronix.com"
                 className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                required
+                disabled={isLoading}
               />
             </div>
 
@@ -71,7 +97,7 @@ export default function Loginpage() {
                 }
                 placeholder="••••••••"
                 className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                required
+                disabled={isLoading}
               />
             </div>
 
@@ -86,19 +112,30 @@ export default function Loginpage() {
             </div>
 
             <div className="text-sm text-center text-gray-600">
-              <a
-                href="#"
-                className="font-medium text-blue-600 hover:text-blue-500"
+              <Link to="/forget-password" className="font-medium text-blue-600 hover:text-blue-500"
               >
-                Forgot your password?
-              </a>
+                Forget your password?
+              </Link>
             </div>
 
             <button
               type="submit"
-              className="w-full py-2 font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              disabled={isLoading}
+              className={`w-full flex items-center justify-center py-2 font-bold text-white rounded-md transition duration-200 ${
+                isLoading
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              Sign In
+              {isLoading ? (
+                <>
+                  {/* animate-spin class icon ko gol-gol ghumati hai */}
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                "Sign In"
+              )}
             </button>
           </form>
         </div>

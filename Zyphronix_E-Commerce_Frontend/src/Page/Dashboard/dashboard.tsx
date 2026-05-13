@@ -1,11 +1,24 @@
 import { useNavigate } from "react-router";
+import { Loader2, LogOut } from "lucide-react";
+import { useState } from "react";
 
 export default function Dashboard() {
   const navigate = useNavigate();
 
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   const handleLogout = () => {
-    localStorage.removeItem("loginAdmin");
-    navigate("/login");
+    setIsLoggingOut(true);
+
+    setTimeout(() => {
+      // Batue se token nikala
+      localStorage.removeItem("loginAdmin");
+
+      setIsLoggingOut(false);
+
+      // Login page par bhej diya
+      navigate("/login");
+    }, 1000);
   };
 
   return <>
@@ -25,9 +38,22 @@ export default function Dashboard() {
 
         <button
           onClick={handleLogout}
-          className="w-full py-2 font-bold text-white bg-red-600 rounded-md hover:bg-red-700 transition duration-200"
+          disabled={isLoggingOut}
+          className={`w-full mt-6 flex items-center justify-center px-4 py-2 font-bold text-white rounded-md transition duration-200 ${
+          isLoggingOut ? "bg-red-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
+        }`}
         >
-          Sign Out
+          {isLoggingOut ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Logging out...
+          </>
+        ) : (
+          <>
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </>
+        )}
         </button>
       </div>
     </div>
