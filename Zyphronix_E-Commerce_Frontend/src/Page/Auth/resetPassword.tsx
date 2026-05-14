@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { authService } from "../../services/authService";
+import { toast } from "react-toastify";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -7,7 +9,6 @@ export default function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleSubmit = async (event: any) => {
@@ -23,29 +24,32 @@ export default function ResetPassword() {
       return;
     }
 
-    const savedEmail = localStorage.getItem("resetEmail");
+    const savedEmail = sessionStorage.getItem("resetEmail");
 
     try {
       setIsLoading(true);
       setErrorMessage("");
       
       console.log("Resetting password for:", savedEmail);
+      
+      const response = await authService.resetPassword({ 
+        email: savedEmail, 
+        new_password: newPassword,
+        confirm_password: confirmPassword
+      });
 
-      // Backend call aayegi: authService.resetPassword({ email: savedEmail, newPassword })
+      toast.success(response.data?.message || "Password reset successfully!");
       setTimeout(() => {
         setIsLoading(false);
-        setSuccessMessage("Password reset successfully! Redirecting to login...");
         
         // Kaam hone ke baad email ko storage se saaf kar do
-        localStorage.removeItem("resetEmail");
-
-        setTimeout(() => {
-          navigate("/login");
-        }, 1500);
-      }, 1000);
+        sessionStorage.removeItem("resetEmail");
+        navigate("/login");
+      }, 1500);
 
     } catch (error: any) {
-      setErrorMessage("Failed to reset password. Please try again.");
+      console.error("Reset Password Error:", error);
+      toast.error(error.response?.data?.message || "Failed to reset password. Please try again.");
       setIsLoading(false);
     }
   };
@@ -59,7 +63,6 @@ export default function ResetPassword() {
         </div>
 
         {errorMessage && <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md">{errorMessage}</div>}
-        {successMessage && <div className="p-3 text-sm text-green-700 bg-green-100 rounded-md">{successMessage}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

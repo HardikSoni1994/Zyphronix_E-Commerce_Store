@@ -41,8 +41,11 @@ export default function ForgetPassword() {
 
       // Success hone par message set karega
       setSuccessMessage(response.data?.message || "Password reset OTP/Link sent successfully to your email.");
-      localStorage.setItem("resetEmail", email);
+      sessionStorage.setItem("resetEmail", email);
+        
+      setTimeout(() => {
         navigate("/verify-otp");
+      }, 1500);
       
     } catch (error: any) {
       console.error("Forget Password Error:", error);

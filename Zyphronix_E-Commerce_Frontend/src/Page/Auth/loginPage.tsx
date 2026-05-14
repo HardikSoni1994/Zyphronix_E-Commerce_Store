@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router";
 import { Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 import { authService } from "../../services/authService";
 
 export default function Loginpage() {
@@ -40,12 +41,15 @@ export default function Loginpage() {
 
       const response = await authService.loginAdmin(loginData);
 
-      console.log("Response :", response);
+      toast.success(response.data?.message || "Login Successful! Welcome back.");
 
       const { token } = response.data.token;
       localStorage.setItem("loginAdmin", token);
 
-      navigate("/dashboard");
+     setTimeout(() => {
+       navigate("/dashboard");
+     }, 1000);
+     
     } catch (error: any) {
       setErrorMessage(error.response?.data?.message || "Invalid credentials.");
     } finally {

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 import { Loader2, LogOut } from "lucide-react";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -10,6 +11,8 @@ export default function Dashboard() {
   const handleLogout = () => {
     setIsLoggingOut(true);
 
+    toast.success("Logged out successfully!");
+    
     setTimeout(() => {
       // Batue se token nikala
       localStorage.removeItem("loginAdmin");
