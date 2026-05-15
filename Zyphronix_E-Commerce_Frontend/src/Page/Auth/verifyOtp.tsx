@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { authService } from "../../services/authService";
 import { toast } from "react-toastify";
+import { RefreshCw, Timer } from "lucide-react";
 
 export default function VerifyOtp() {
   const navigate = useNavigate();
@@ -11,6 +12,9 @@ export default function VerifyOtp() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [minute, setMinute] = useState<number>(1);
+  const [second, setSecond] = useState<number>(59); // 1 min 59 sec (Total 2 min)
+  const [resend, setResend] = useState<boolean>(false);
 
   // Page load hote hi pehle box par cursor laao
   useEffect(() => {
@@ -18,6 +22,30 @@ export default function VerifyOtp() {
       inputRefs.current[0].focus();
     }
   }, []);
+
+  useEffect(() => {
+    if (inputRefs.current[0]) {
+      inputRefs.current[0].focus();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (minute === 0 && second === 0) {
+      setResend(true);
+      return; 
+    }
+
+    const timer = setTimeout(() => {
+      if (second > 0) {
+        setSecond(second - 1);
+      } else {
+        setMinute(minute - 1);
+        setSecond(59);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [minute, second]);
 
   const handleChange = (element: HTMLInputElement, index: number) => {
     if (isNaN(Number(element.value))) return;
@@ -96,6 +124,11 @@ export default function VerifyOtp() {
       // 🚀 API hit hote hi success toast fek do
       const response = await authService.forgetPassword({ email: savedEmail });
       toast.success(response.data?.message || "New OTP has been sent to your email!");
+
+      setMinute(1);
+      setSecond(59);
+      setResend(false);
+
     } catch (error: any) {
       console.error("Resend OTP Error:", error);
       toast.error(error.response?.data?.message || "Failed to resend OTP. Please try again later.");
@@ -154,16 +187,28 @@ export default function VerifyOtp() {
           </button>
         </form>
 
-        <div className="text-sm text-center mt-4">
-        <span className="text-gray-600">Didn't receive the code? </span>
-        <button
-          type="button"
-          onClick={handleResendOtp}
-          className="font-medium text-blue-600 hover:text-blue-500 bg-transparent border-none cursor-pointer underline ml-1"
-        >
-          Resend OTP
-        </button>
+        <div className="flex items-center justify-center gap-2 mt-6 text-sm">
+        <span className="text-gray-600">Didn't receive the code?</span>
+        
+        {resend ? (
+          <button
+            type="button"
+            onClick={handleResendOtp}
+            className="group flex items-center gap-1.5 font-semibold text-blue-600 hover:text-blue-700 transition-colors duration-200 ease-in-out"
+          >
+            {/* 🚀 Hover karne par yeh icon gol ghoomega */}
+            <RefreshCw size={16} className="group-hover:animate-spin transition-all" />
+            Resend OTP
+          </button>
+        ) : (
+          /* 🚀 Timer ab ek mast gray badge/pill ke andar dikhega */
+          <span className="flex items-center gap-1.5 font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full shadow-inner border border-gray-200">
+            <Timer size={16} className="text-gray-500" />
+            0{minute}:{second < 10 ? `0${second}` : second}
+          </span>
+        )}
       </div>
+
       </div>
     </div>
   );
