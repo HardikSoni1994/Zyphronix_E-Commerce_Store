@@ -12,8 +12,7 @@ export default function VerifyOtp() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [minute, setMinute] = useState<number>(1);
-  const [second, setSecond] = useState<number>(59); // 1 min 59 sec (Total 2 min)
+  const [timer, setTimer] = useState<number>(120)
   const [resend, setResend] = useState<boolean>(false);
 
   // Page load hote hi pehle box par cursor laao
@@ -30,22 +29,16 @@ export default function VerifyOtp() {
   }, []);
 
   useEffect(() => {
-    if (minute === 0 && second === 0) {
+    if (timer === 0) {
       setResend(true);
-      return; 
+      return;
     }
-
-    const timer = setTimeout(() => {
-      if (second > 0) {
-        setSecond(second - 1);
-      } else {
-        setMinute(minute - 1);
-        setSecond(59);
-      }
+    const myTimer = setTimeout(() => {
+      setTimer(timer - 1);
     }, 1000);
 
-    return () => clearTimeout(timer);
-  }, [minute, second]);
+    return() => clearTimeout(myTimer)
+  }, [timer]);
 
   const handleChange = (element: HTMLInputElement, index: number) => {
     if (isNaN(Number(element.value))) return;
@@ -125,8 +118,7 @@ export default function VerifyOtp() {
       const response = await authService.forgetPassword({ email: savedEmail });
       toast.success(response.data?.message || "New OTP has been sent to your email!");
 
-      setMinute(1);
-      setSecond(59);
+      setTimer(120);
       setResend(false);
 
     } catch (error: any) {
@@ -204,7 +196,7 @@ export default function VerifyOtp() {
           /* 🚀 Timer ab ek mast gray badge/pill ke andar dikhega */
           <span className="flex items-center gap-1.5 font-medium text-gray-600 bg-gray-100 px-3 py-1 rounded-full shadow-inner border border-gray-200">
             <Timer size={16} className="text-gray-500" />
-            0{minute}:{second < 10 ? `0${second}` : second}
+            {`${Math.floor(timer / 60).toString().padStart(2, "0")} : ${(timer % 60).toString().padStart(2, "0")}`}
           </span>
         )}
       </div>
